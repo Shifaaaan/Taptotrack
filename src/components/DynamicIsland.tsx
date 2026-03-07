@@ -7,6 +7,9 @@ export function DynamicIsland() {
   const [isExpanded, setIsExpanded] = useState(false);
   const difficulty = useTimerStore((state) => state.difficulty);
   const setDifficulty = useTimerStore((state) => state.setDifficulty);
+  const hasCompletedOnboarding = useTimerStore((state) => state.hasCompletedOnboarding);
+  const onboardingStep = useTimerStore((state) => state.onboardingStep);
+  const advanceOnboarding = useTimerStore((state) => state.advanceOnboarding);
   const islandRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -44,11 +47,21 @@ export function DynamicIsland() {
         borderRadius: isExpanded ? 32 : 18,
       }}
       transition={butterySpring}
-      onClick={() => !isExpanded && setIsExpanded(true)}
+      onClick={() => {
+        if (!hasCompletedOnboarding) {
+          if (onboardingStep === 2) {
+            setIsExpanded(true);
+            advanceOnboarding();
+          }
+          return;
+        }
+        !isExpanded && setIsExpanded(true);
+      }}
       className={cn(
         "bg-black ring-1 ring-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_10px_40px_rgba(0,0,0,0.5)]",
         "flex flex-col overflow-hidden cursor-pointer relative z-50",
-        !isExpanded && "items-center justify-center hover:bg-white/[0.02]"
+        !isExpanded && "items-center justify-center hover:bg-white/[0.02]",
+        !hasCompletedOnboarding && (onboardingStep === 2 || onboardingStep === 3) && "ring-4 ring-emerald-500/50 z-[160]"
       )}
     >
       <AnimatePresence mode="wait">
@@ -95,7 +108,18 @@ export function DynamicIsland() {
                 return (
                   <button
                     key={diff.label}
-                    onClick={(e) => { e.stopPropagation(); setDifficulty(diff.label); }}
+                    onClick={(e) => { 
+                      e.stopPropagation(); 
+                      if (!hasCompletedOnboarding) {
+                        if (onboardingStep === 3) {
+                          setDifficulty(diff.label);
+                          setIsExpanded(false);
+                          advanceOnboarding();
+                        }
+                        return;
+                      }
+                      setDifficulty(diff.label); 
+                    }}
                     className="relative flex-1 h-full flex items-center justify-center z-10"
                   >
                     <span className={cn(

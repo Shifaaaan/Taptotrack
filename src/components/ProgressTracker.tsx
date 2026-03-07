@@ -13,6 +13,9 @@ type SortOption = 'Time (Low to High)' | 'Time (High to Low)' | 'Question #';
 export function ProgressTracker({ isOpen, onClose }: ProgressTrackerProps) {
   const records = useTimerStore((state) => state.records);
   const clearRecords = useTimerStore((state) => state.clearRecords);
+  const hasCompletedOnboarding = useTimerStore((state) => state.hasCompletedOnboarding);
+  const onboardingStep = useTimerStore((state) => state.onboardingStep);
+  const completeOnboarding = useTimerStore((state) => state.completeOnboarding);
   const [sortOption, setSortOption] = useState<SortOption>('Time (Low to High)');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -37,15 +40,20 @@ export function ProgressTracker({ isOpen, onClose }: ProgressTrackerProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-xl z-[100]"
+            onClick={() => {
+              if (!hasCompletedOnboarding && onboardingStep === 5) {
+                completeOnboarding();
+              }
+              onClose();
+            }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-xl z-[200]"
           />
           <motion.div
             initial={{ opacity: 0, y: '100%' }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: '100%' }}
             transition={springConfig}
-            className="fixed inset-x-0 bottom-0 top-24 bg-[#0a0a0a] rounded-t-[2.5rem] ring-1 ring-white/10 shadow-[0_-20px_40px_rgba(0,0,0,0.5)] z-[101] flex flex-col overflow-hidden"
+            className="fixed inset-x-0 bottom-0 top-24 bg-[#0a0a0a] rounded-t-[2.5rem] ring-1 ring-white/10 shadow-[0_-20px_40px_rgba(0,0,0,0.5)] z-[201] flex flex-col overflow-hidden"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-8 border-b border-white/5">
@@ -91,8 +99,16 @@ export function ProgressTracker({ isOpen, onClose }: ProgressTrackerProps) {
                 </div>
 
                 <button 
-                  onClick={onClose}
-                  className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+                  onClick={() => {
+                    if (!hasCompletedOnboarding && onboardingStep === 5) {
+                      completeOnboarding();
+                    }
+                    onClose();
+                  }}
+                  className={cn(
+                    "w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors",
+                    !hasCompletedOnboarding && onboardingStep === 5 && "ring-4 ring-emerald-500/50 relative z-[210]"
+                  )}
                 >
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M1 13L13 1M1 1L13 13" stroke="white" strokeWidth="2" strokeLinecap="round"/>

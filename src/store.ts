@@ -15,9 +15,14 @@ interface TimerState {
   records: Record[];
   difficulty: Difficulty;
   nextQuestionNumber: number;
+  hasCompletedOnboarding: boolean;
+  onboardingStep: number;
   setDifficulty: (diff: Difficulty) => void;
   addRecord: (timeMs: number) => void;
   clearRecords: () => void;
+  advanceOnboarding: () => void;
+  completeOnboarding: () => void;
+  resetOnboarding: () => void;
 }
 
 export const useTimerStore = create<TimerState>()(
@@ -26,6 +31,8 @@ export const useTimerStore = create<TimerState>()(
       records: [],
       difficulty: 'Normal',
       nextQuestionNumber: 1,
+      hasCompletedOnboarding: false,
+      onboardingStep: 1,
       setDifficulty: (diff) => set({ difficulty: diff }),
       addRecord: (timeMs) =>
         set((state) => ({
@@ -42,9 +49,13 @@ export const useTimerStore = create<TimerState>()(
           nextQuestionNumber: state.nextQuestionNumber + 1,
         })),
       clearRecords: () => set({ records: [], nextQuestionNumber: 1 }),
+      advanceOnboarding: () => set((state) => ({ onboardingStep: state.onboardingStep + 1 })),
+      completeOnboarding: () => set({ hasCompletedOnboarding: true, onboardingStep: 0 }),
+      resetOnboarding: () => set({ hasCompletedOnboarding: false, onboardingStep: 1 }),
     }),
     {
       name: 'study-timer-storage',
     }
   )
 );
+

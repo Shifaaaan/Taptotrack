@@ -5,6 +5,7 @@ import { cn, springConfig } from './utils';
 import { DynamicIsland } from './components/DynamicIsland';
 import { ProgressTracker } from './components/ProgressTracker';
 import { TimerDisplay } from './components/TimerDisplay';
+import { Onboarding } from './components/Onboarding';
 
 type TimerStatus = 'IDLE' | 'RUNNING' | 'STOPPED';
 
@@ -14,12 +15,21 @@ export default function App() {
   const [isTrackerOpen, setIsTrackerOpen] = useState(false);
   
   const addRecord = useTimerStore((state) => state.addRecord);
+  const hasCompletedOnboarding = useTimerStore((state) => state.hasCompletedOnboarding);
+  const onboardingStep = useTimerStore((state) => state.onboardingStep);
+  const advanceOnboarding = useTimerStore((state) => state.advanceOnboarding);
+  const completeOnboarding = useTimerStore((state) => state.completeOnboarding);
 
   const holdTimeoutRef = useRef<number | null>(null);
 
   const handlePointerDown = (e: React.PointerEvent) => {
     e.preventDefault();
     
+    if (!hasCompletedOnboarding) {
+      if (onboardingStep === 1) advanceOnboarding();
+      return;
+    }
+
     if (status === 'IDLE' || status === 'STOPPED') {
       if (status === 'STOPPED') return;
       
@@ -67,10 +77,25 @@ export default function App() {
       />
 
       {/* Top Bar */}
-      <div className="relative z-50 flex items-start justify-between p-6 pointer-events-none">
-        <div className="pointer-events-auto">
+      <div className={cn(
+        "relative flex items-start justify-between p-6 pointer-events-none",
+        !hasCompletedOnboarding && (onboardingStep === 2 || onboardingStep === 3 || onboardingStep === 4) ? "z-[160]" : "z-50"
+      )}>
+        <div className={cn(
+          "pointer-events-auto rounded-full transition-all duration-300",
+          !hasCompletedOnboarding && onboardingStep === 4 && "ring-4 ring-emerald-500/50 bg-white/10"
+        )}>
           <button 
-            onClick={() => setIsTrackerOpen(true)}
+            onClick={() => {
+              if (!hasCompletedOnboarding) {
+                if (onboardingStep === 4) {
+                  setIsTrackerOpen(true);
+                  advanceOnboarding();
+                }
+                return;
+              }
+              setIsTrackerOpen(true);
+            }}
             className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center backdrop-blur-md hover:bg-white/10 transition-colors shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
           >
             {/* Nothing style dot matrix icon approx */}
@@ -90,7 +115,10 @@ export default function App() {
       </div>
 
       {/* Main Layout Grid */}
-      <div className="flex-1 grid grid-cols-12 grid-rows-[25%_75%] px-6 pb-6 z-10">
+      <div className={cn(
+        "flex-1 grid grid-cols-12 grid-rows-[25%_75%] px-6 pb-6 relative",
+        !hasCompletedOnboarding && onboardingStep === 1 ? "z-[160]" : "z-10"
+      )}>
         {/* Display Zone (Top 25%) */}
         <div className="col-span-12 flex items-center justify-center">
           <TimerDisplay 
@@ -100,14 +128,18 @@ export default function App() {
         </div>
 
         {/* Interaction Pad (Bottom 75%) */}
-        <div className="col-span-12 relative h-full pb-4">
+        <div className={cn(
+          "col-span-12 relative h-full pb-4",
+          !hasCompletedOnboarding && onboardingStep === 1 ? "z-[160]" : "z-10"
+        )}>
           <motion.div
             onPointerDown={handlePointerDown}
             className={cn(
               "w-full h-full rounded-[2rem] md:rounded-[3rem] bg-white/[0.02] backdrop-blur-sm",
               "ring-1 ring-white/10 shadow-[inset_0_2px_10px_rgba(255,255,255,0.05)]",
               "flex items-center justify-center cursor-pointer touch-none",
-              status === 'STOPPED' && "pointer-events-none opacity-50"
+              status === 'STOPPED' && "pointer-events-none opacity-50",
+              !hasCompletedOnboarding && onboardingStep === 1 && "ring-4 ring-emerald-500/50 bg-white/10"
             )}
             whileTap={{ scale: 0.98, backgroundColor: 'rgba(255,255,255,0.05)' }}
             animate={{
@@ -155,6 +187,9 @@ export default function App() {
 
       {/* Progress Tracker Modal */}
       <ProgressTracker isOpen={isTrackerOpen} onClose={() => setIsTrackerOpen(false)} />
+
+      {/* One-time Onboarding Overlay */}
+      <Onboarding />
     </div>
   );
 }
