@@ -12,6 +12,7 @@ export function TimerDisplay({ status, onTimeUpdate, initialTime = 0 }: TimerDis
   const [timeMs, setTimeMs] = useState(initialTime);
   const requestRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
+  const accumulatedTimeRef = useRef<number>(0);
   const onTimeUpdateRef = useRef(onTimeUpdate);
 
   useEffect(() => {
@@ -21,10 +22,11 @@ export function TimerDisplay({ status, onTimeUpdate, initialTime = 0 }: TimerDis
   useEffect(() => {
     if (status === 'IDLE') {
       setTimeMs(0);
+      accumulatedTimeRef.current = 0;
     } else if (status === 'RUNNING') {
       startTimeRef.current = performance.now();
       const updateTimer = () => {
-        const current = performance.now() - startTimeRef.current;
+        const current = performance.now() - startTimeRef.current + accumulatedTimeRef.current;
         setTimeMs(current);
         requestRef.current = requestAnimationFrame(updateTimer);
       };
@@ -33,7 +35,8 @@ export function TimerDisplay({ status, onTimeUpdate, initialTime = 0 }: TimerDis
       if (requestRef.current) {
         cancelAnimationFrame(requestRef.current);
       }
-      const finalTime = performance.now() - startTimeRef.current;
+      const finalTime = performance.now() - startTimeRef.current + accumulatedTimeRef.current;
+      accumulatedTimeRef.current = finalTime;
       setTimeMs(finalTime);
       onTimeUpdateRef.current(finalTime);
     }
@@ -51,7 +54,7 @@ export function TimerDisplay({ status, onTimeUpdate, initialTime = 0 }: TimerDis
   return (
     <motion.div 
       className={cn(
-        "text-[20vw] md:text-[12rem] leading-none font-medium tracking-tighter tabular-nums font-timer inline-block scale-y-105",
+        "text-[24vw] md:text-[14rem] landscape:text-[40vh] leading-none font-medium tracking-tighter tabular-nums font-timer inline-block scale-y-105",
         timerColor
       )}
       style={{ fontStretch: 'condensed' }}

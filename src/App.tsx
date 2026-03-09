@@ -6,6 +6,7 @@ import { DynamicIsland } from './components/DynamicIsland';
 import { ProgressTracker } from './components/ProgressTracker';
 import { TimerDisplay } from './components/TimerDisplay';
 import { Onboarding } from './components/Onboarding';
+import { BarChart2 } from 'lucide-react';
 
 type TimerStatus = 'IDLE' | 'RUNNING' | 'STOPPED';
 
@@ -31,8 +32,6 @@ export default function App() {
     }
 
     if (status === 'IDLE' || status === 'STOPPED') {
-      if (status === 'STOPPED') return;
-      
       // Instant start on tap
       setStatus('RUNNING');
     } else if (status === 'RUNNING') {
@@ -98,12 +97,7 @@ export default function App() {
             }}
             className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center backdrop-blur-md hover:bg-white/10 transition-colors shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]"
           >
-            {/* Nothing style dot matrix icon approx */}
-            <div className="grid grid-cols-3 gap-[2px]">
-              {[...Array(9)].map((_, i) => (
-                <div key={i} className="w-1.5 h-1.5 bg-white rounded-full opacity-80" />
-              ))}
-            </div>
+            <BarChart2 className="w-6 h-6 text-white opacity-80" />
           </button>
         </div>
         
@@ -116,29 +110,34 @@ export default function App() {
 
       {/* Main Layout Grid */}
       <div className={cn(
-        "flex-1 grid grid-cols-12 grid-rows-[25%_75%] px-6 pb-6 relative",
+        "flex-1 flex flex-col px-6 pb-6 relative",
         !hasCompletedOnboarding && onboardingStep === 1 ? "z-[160]" : "z-10"
       )}>
-        {/* Display Zone (Top 25%) */}
-        <div className="col-span-12 flex items-center justify-center">
+        {/* Display Zone (Top 50%) */}
+        <div className="flex-1 flex items-center justify-center min-h-0">
           <TimerDisplay 
             status={status} 
             onTimeUpdate={(time) => setFinalTimeMs(time)} 
           />
         </div>
 
-        {/* Interaction Pad (Bottom 75%) */}
-        <div className={cn(
-          "col-span-12 relative h-full pb-4",
-          !hasCompletedOnboarding && onboardingStep === 1 ? "z-[160]" : "z-10"
-        )}>
+        {/* Interaction Pad (Bottom 50%) */}
+        <motion.div
+          className={cn(
+            "flex-1 relative min-h-0",
+            !hasCompletedOnboarding && onboardingStep === 1 ? "z-[160]" : "z-10"
+          )}
+          animate={{
+            paddingBottom: status === 'STOPPED' ? '120px' : '16px'
+          }}
+          transition={springConfig}
+        >
           <motion.div
             onPointerDown={handlePointerDown}
             className={cn(
               "w-full h-full rounded-[2rem] md:rounded-[3rem] bg-white/[0.02] backdrop-blur-sm",
               "ring-1 ring-white/10 shadow-[inset_0_2px_10px_rgba(255,255,255,0.05)]",
               "flex items-center justify-center cursor-pointer touch-none",
-              status === 'STOPPED' && "pointer-events-none opacity-50",
               !hasCompletedOnboarding && onboardingStep === 1 && "ring-4 ring-emerald-500/50 bg-white/10"
             )}
             whileTap={{ scale: 0.98, backgroundColor: 'rgba(255,255,255,0.05)' }}
@@ -150,6 +149,11 @@ export default function App() {
             {status === 'IDLE' && (
               <span className="text-white/20 font-medium tracking-widest uppercase text-sm md:text-base">
                 Tap to Start
+              </span>
+            )}
+            {status === 'STOPPED' && (
+              <span className="text-white/20 font-medium tracking-widest uppercase text-sm md:text-base">
+                Tap to Resume
               </span>
             )}
           </motion.div>
@@ -182,7 +186,7 @@ export default function App() {
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
+        </motion.div>
       </div>
 
       {/* Progress Tracker Modal */}

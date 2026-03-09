@@ -7,9 +7,16 @@ export function cn(...inputs: ClassValue[]) {
 
 export const springConfig = {
   type: 'spring',
-  stiffness: 300,
+  stiffness: 400,
   damping: 30,
-  mass: 1,
+  mass: 0.8,
+};
+
+export const butterySpring = {
+  type: 'spring',
+  stiffness: 300,
+  damping: 25,
+  mass: 0.5,
 };
 
 export function formatTime(ms: number) {
